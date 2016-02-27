@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 #include "3d/CameraControls.hpp"
 #include "3d/Mesh.hpp"
 #include "base/Random.hpp"
@@ -72,7 +70,11 @@ public:
 
     void				startPathTracingProcess				( const MeshWithColors* scene, AreaLight*, RayTracer* rt, Image* dest, int bounces, const CameraControls& camera );
 	static void			pathTraceBlock						( MulticoreLauncher::Task& t);
+#ifdef ISPC
 	static Vec3f		traceRay							( const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, int current_bounce, std::vector<ISPCCheckNode>& b_nodes);
+#else
+    static Vec3f        traceRay(const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, int current_bounce, std::vector<CheckNode>& b_nodes);
+#endif
 	static void			getTextureParameters				( const RaycastResult& hit, Vec3f& diffuse, Vec3f& n, Vec3f& specular );
     void				updatePicture						( Image* display );	// normalize by 1/w
     void				checkFinish							( void );

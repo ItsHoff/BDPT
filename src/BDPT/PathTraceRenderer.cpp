@@ -138,7 +138,7 @@ void PathTraceRenderer::pathTraceBlock( MulticoreLauncher::Task& t )
         int pixel_x = block.m_x + (i % block.m_width);
         int pixel_y = block.m_y + (i / block.m_width);
 
-		int dir_samples = 2;
+		int dir_samples = 3;
 		int samples_per_pixel = sqr(dir_samples);
 		for (int i = 0; i < samples_per_pixel; i++){
 			// generate ray through pixel
@@ -170,11 +170,19 @@ void PathTraceRenderer::pathTraceBlock( MulticoreLauncher::Task& t )
     }
 }
 
+#ifdef ISPC
 Vec3f PathTraceRenderer::traceRay(const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, int current_bounce, std::vector<ISPCCheckNode>& b_nodes){
+#else
+Vec3f PathTraceRenderer::traceRay(const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, int current_bounce, std::vector<CheckNode>& b_nodes){
+#endif
 	RayTracer& rt = *ctx.m_rt;
 	AreaLight& light = *ctx.m_light;
 	Vec3f result;
+#ifdef ISPC
 	RaycastResult hit = rt.ispcRaycast(orig + 100 * FLT_EPSILON * dir, dir * ctx.m_camera->getFar(), b_nodes);
+#else
+	RaycastResult hit = rt.raycast(orig + 100 * FLT_EPSILON * dir, dir * ctx.m_camera->getFar(), b_nodes);
+#endif
 	if (hit.tri != nullptr){
 
 		// Get the material properties
@@ -189,7 +197,11 @@ Vec3f PathTraceRenderer::traceRay(const PathTracerContext& ctx, Random& R, Vec3f
 		Vec3f light_sample;
 		light.sample(lpdf, light_sample, 0, R);
 		Vec3f shadow_dir = light_sample - hit.point;
+#ifdef ISPC
 		auto shadow = rt.ispcRaycast(hit.point + 0.01f * shadow_dir, shadow_dir, b_nodes);
+#else
+		auto shadow = rt.raycast(hit.point + 0.01f * shadow_dir, shadow_dir, b_nodes);
+#endif
 		if (shadow.tri == nullptr){
 			float cos_l = clamp(dot(light.getNormal(), -shadow_dir.normalized()), 0.0f, 1.0f);
 			float cos_t = clamp(dot(mapped_n, shadow_dir.normalized()), 0.0f, 1.0f);
