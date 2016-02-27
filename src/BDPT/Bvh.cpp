@@ -3,9 +3,12 @@
 #include <algorithm>
 #include <deque>
 
-#include "ispc_types.hpp"
+#ifdef ISPC
+    #include "ispc_util.hpp"
+#endif
 
 namespace FW
+{ namespace BDPT
 {
 
 
@@ -305,4 +308,5 @@ void BVH::rebranchForISPC(U32 power) {
 }
 #endif // ISPC
 	
+} //namespace BDPT
 } //namespace FW

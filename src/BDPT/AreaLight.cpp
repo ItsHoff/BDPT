@@ -2,7 +2,9 @@
 #include "AreaLight.hpp"
 
 
-namespace FW {
+namespace FW 
+{ namespace BDPT
+{
 
 
 void AreaLight::draw(const Mat4f& worldToCamera, const Mat4f& projection) {
@@ -25,5 +27,5 @@ void AreaLight::sample(float& pdf, Vec3f& p, int base, Random& rnd) {
 	p = m_xform * Vec3f(m_size.x * rnd.getF32(-1, 1), m_size.y * rnd.getF32(-1, 1), 0);
 }
 
-
+} // namespace BDPT
 } // namespace FW

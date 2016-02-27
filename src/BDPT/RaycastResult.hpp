@@ -8,7 +8,9 @@
 #include <limits>
 
 
-namespace FW {
+namespace FW 
+{ namespace BDPT
+{ 
 
 
 // Result information of a raycast.
@@ -44,4 +46,5 @@ struct RaycastResult {
 };
 
 
-}
+} // namespace BDPT
+} // namespace FW

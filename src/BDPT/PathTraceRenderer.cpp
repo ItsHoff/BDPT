@@ -1,3 +1,5 @@
+#include "gui/Image.hpp"
+
 #include "PathTraceRenderer.hpp"
 #include "RayTracer.hpp"
 #include "AreaLight.hpp"
@@ -8,57 +10,60 @@
 
 
 
-namespace FW {
-	bool DEBUG = false;
+namespace FW 
+{ namespace BDPT 
+{
 
-	bool PathTraceRenderer::m_normalMapped = true;
-	bool PathTraceRenderer::m_russian_roulette = true;
+bool DEBUG = false;
 
-	void PathTraceRenderer::getTextureParameters(const RaycastResult& hit, Vec3f& diffuse, Vec3f& n, Vec3f& specular)
-	{
-		MeshBase::Material* mat = hit.tri->m_material;
-		// Read value from albedo texture into diffuse.
-	    // If textured, use the texture; if not, use Material.diffuse.
-		Vec2f tex_uv = hit.u * hit.tri->m_vertices[1].t + hit.v * hit.tri->m_vertices[2].t + (1 - hit.u - hit.v)*hit.tri->m_vertices[0].t;
-		if (mat->textures[MeshBase::TextureType_Diffuse].exists()) {
+bool PathTraceRenderer::m_normalMapped = true;
+bool PathTraceRenderer::m_russian_roulette = true;
 
-			const Texture& tex = mat->textures[MeshBase::TextureType_Diffuse];
-			const Image& teximg = *tex.getImage();
+void PathTraceRenderer::getTextureParameters(const RaycastResult& hit, Vec3f& diffuse, Vec3f& n, Vec3f& specular)
+{
+    MeshBase::Material* mat = hit.tri->m_material;
+    // Read value from albedo texture into diffuse.
+    // If textured, use the texture; if not, use Material.diffuse.
+    Vec2f tex_uv = hit.u * hit.tri->m_vertices[1].t + hit.v * hit.tri->m_vertices[2].t + (1 - hit.u - hit.v)*hit.tri->m_vertices[0].t;
+    if (mat->textures[MeshBase::TextureType_Diffuse].exists()) {
 
-			Vec2i texelCoords = getTexelCoords(tex_uv, teximg.getSize());
-			diffuse = teximg.getVec4f(texelCoords).getXYZ();
-			diffuse.x = pow(diffuse.x, 2.2f);
-			diffuse.y = pow(diffuse.y, 2.2f);
-			diffuse.z = pow(diffuse.z, 2.2f);
-		}
-		else {
-			// no texture, use constant albedo from material structure.
-			diffuse = mat->diffuse.getXYZ();
-		}
-		n = (hit.u * hit.tri->m_vertices[1].n + hit.v * hit.tri->m_vertices[2].n + (1 - hit.u - hit.v)*hit.tri->m_vertices[0].n).normalized();
-		specular = n;		        // Dirty, but not using specular for anything else TODO: Clean this!
-		if (m_normalMapped && mat->textures[MeshBase::TextureType_Normal].exists()){
-			const Texture& n_tex = mat->textures[MeshBase::TextureType_Normal];
-			const Image& n_teximg = *n_tex.getImage();
+        const Texture& tex = mat->textures[MeshBase::TextureType_Diffuse];
+        const Image& teximg = *tex.getImage();
 
-			Vec2i n_texelCoords = getTexelCoords(tex_uv, n_teximg.getSize());
-			Vec3f nm = (2.0f * n_teximg.getVec4f(n_texelCoords).getXYZ() - 1.0f).normalized();
+        Vec2i texelCoords = getTexelCoords(tex_uv, teximg.getSize());
+        diffuse = teximg.getVec4f(texelCoords).getXYZ();
+        diffuse.x = pow(diffuse.x, 2.2f);
+        diffuse.y = pow(diffuse.y, 2.2f);
+        diffuse.z = pow(diffuse.z, 2.2f);
+    }
+    else {
+        // no texture, use constant albedo from material structure.
+        diffuse = mat->diffuse.getXYZ();
+    }
+    n = (hit.u * hit.tri->m_vertices[1].n + hit.v * hit.tri->m_vertices[2].n + (1 - hit.u - hit.v)*hit.tri->m_vertices[0].n).normalized();
+    specular = n;		        // Dirty, but not using specular for anything else TODO: Clean this!
+    if (m_normalMapped && mat->textures[MeshBase::TextureType_Normal].exists()){
+        const Texture& n_tex = mat->textures[MeshBase::TextureType_Normal];
+        const Image& n_teximg = *n_tex.getImage();
 
-			Vec3f d_pos1 = hit.tri->m_vertices[1].p - hit.tri->m_vertices[0].p;
-			Vec3f d_pos2 = hit.tri->m_vertices[2].p - hit.tri->m_vertices[0].p;
-			Vec2f d_uv1 = hit.tri->m_vertices[1].t - hit.tri->m_vertices[0].t;
-			Vec2f d_uv2 = hit.tri->m_vertices[2].t - hit.tri->m_vertices[0].t;
+        Vec2i n_texelCoords = getTexelCoords(tex_uv, n_teximg.getSize());
+        Vec3f nm = (2.0f * n_teximg.getVec4f(n_texelCoords).getXYZ() - 1.0f).normalized();
 
-			float r = clamp(1.0f / (d_uv1.x * d_uv2.y - d_uv1.y * d_uv2.x), -10000.0f, 10000.0f);
-			Vec3f T = ((d_pos1 * d_uv2.y - d_pos2 * d_uv1.y) * r).normalized();
-			Vec3f B = -((d_pos2 * d_uv1.x - d_pos1 * d_uv2.x) * r).normalized();
-			Mat3f TBN;
-			TBN.setCol(0, T);
-			TBN.setCol(1, B);
-			TBN.setCol(2, n);
-			n = (TBN * nm).normalized();
-		}
-	}
+        Vec3f d_pos1 = hit.tri->m_vertices[1].p - hit.tri->m_vertices[0].p;
+        Vec3f d_pos2 = hit.tri->m_vertices[2].p - hit.tri->m_vertices[0].p;
+        Vec2f d_uv1 = hit.tri->m_vertices[1].t - hit.tri->m_vertices[0].t;
+        Vec2f d_uv2 = hit.tri->m_vertices[2].t - hit.tri->m_vertices[0].t;
+
+        float r = clamp(1.0f / (d_uv1.x * d_uv2.y - d_uv1.y * d_uv2.x), -10000.0f, 10000.0f);
+        Vec3f T = ((d_pos1 * d_uv2.y - d_pos2 * d_uv1.y) * r).normalized();
+        Vec3f B = -((d_pos2 * d_uv1.x - d_pos1 * d_uv2.x) * r).normalized();
+        Mat3f TBN;
+        TBN.setCol(0, T);
+        TBN.setCol(1, B);
+        TBN.setCol(2, n);
+        n = (TBN * nm).normalized();
+    }
+}
 
 
 PathTracerContext::PathTracerContext()
@@ -138,7 +143,7 @@ void PathTraceRenderer::pathTraceBlock( MulticoreLauncher::Task& t )
         int pixel_x = block.m_x + (i % block.m_width);
         int pixel_y = block.m_y + (i / block.m_width);
 
-		int dir_samples = 3;
+		int dir_samples = 2;
 		int samples_per_pixel = sqr(dir_samples);
 		for (int i = 0; i < samples_per_pixel; i++){
 			// generate ray through pixel
@@ -384,4 +389,5 @@ void PathTraceRenderer::stop() {
 
 
 
+} // namespace BDPT
 } // namespace FW

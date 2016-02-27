@@ -6,9 +6,8 @@
 
 
 namespace FW
+{ namespace BDPT
 {
-
-class GLContext;
 
 //------------------------------------------------------------------------
 // a simple square-shaped area light source.
@@ -47,4 +46,5 @@ protected:
     Vec3f	m_E;		// Diffuse emission (W/m^2).
 };
 
+} // namespace BDPT
 } // namespace FW

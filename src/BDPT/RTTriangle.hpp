@@ -1,32 +1,39 @@
 #pragma once
 
-
-#include "3d/Mesh.hpp"
 #include "base/math.hpp"
+#include "3d/Mesh.hpp"
 
 
-namespace FW {
+namespace FW 
+{ namespace BDPT
+{ 
 
 struct tri_data {
 	Vec3i vertex_indices;	// indices to the vertex array of the mesh
 	Mat3f M; Vec3f N;		// for Woop intersection
-	tri_data() : M(), N() {}
-	tri_data(const tri_data& other) : M(other.M), N(other.N) {}
-	tri_data(const Vec3f& v0, const Vec3f& v1, const Vec3f& v2, const Vec3f normal) {
 
+	tri_data() : 
+        M(), N() {
+    }
+
+	tri_data(const tri_data& other) : 
+        M(other.M), N(other.N) {
+    }
+
+	tri_data(const Vec3f& v0, const Vec3f& v1, const Vec3f& v2, const Vec3f normal) {
 		M.setCol(0, v1 - v0);
 		M.setCol(1, v2 - v0);
 		M.setCol(2, normal);
-
 		M.invert();
 		N = -M * v0;
 	}
 };
+
+
 // The user pointer member can be used for identifying the triangle in the "parent" mesh representation.
-struct RTTriangle {
-
+class RTTriangle {
+ public:
 	VertexPNTC			m_vertices[3];			// The vertices of the triangle.
-
 	MeshBase::Material* m_material;				// Material of the triangle
 	tri_data			m_data;					// Holds the matrix and vector necessary for Woop intersection and vertex index in the mesh
 	Vec3f				center;
@@ -38,7 +45,6 @@ struct RTTriangle {
 		m_data = tri_data(v0.p, v1.p, v2.p, normal());
 		center = centroid();
 	}
-
 
 	inline Vec3f min() const {
 		return FW::min(m_vertices[0].p, m_vertices[1].p, m_vertices[2].p);
@@ -61,9 +67,7 @@ struct RTTriangle {
 	}
 
 	//Triangle intersection as suggested in [Woop04]
-
 	bool RTTriangle::intersect_woop(const Vec3f& orig, const Vec3f& dir, float& t, float& u, float& v) const {
-
 		Vec3f transformed_orig = m_data.M*orig + m_data.N;
 		Vec3f transformed_dir = m_data.M*dir;
 
@@ -73,8 +77,7 @@ struct RTTriangle {
 
 		return u > .0f && v > .0f && u + v < 1.0f;
 	}
-
 };
 
-
+} // namespace BDPT
 } // namespace FW

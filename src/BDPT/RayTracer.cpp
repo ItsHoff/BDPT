@@ -20,8 +20,8 @@ extern "C" void MD5Buffer( void* buffer, size_t bufLen, unsigned int* pDigest );
 
 
 namespace FW
+{ namespace BDPT
 {
-
 
 Vec2f getTexelCoords(Vec2f uv, const Vec2i size)
 {
@@ -271,4 +271,5 @@ RaycastResult RayTracer::ispcRaycast(const Vec3f & orig, const Vec3f & dir, std:
 }
 #endif // ISPC
 
+} // namespace BDPT
 } // namespace FW

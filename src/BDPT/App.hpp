@@ -16,8 +16,9 @@
 #include "PathTraceRenderer.hpp"
 
 
-namespace FW {
-
+namespace FW 
+{ namespace BDPT
+{
 
 //------------------------------------------------------------------------
 
@@ -156,4 +157,5 @@ private:
 
 
 //------------------------------------------------------------------------
-}
+} // namespace BDPT
+} // namespace FW

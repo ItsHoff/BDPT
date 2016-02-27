@@ -12,12 +12,21 @@
 #include <vector>
 
 #ifdef ISPC
-	#include "ispc_types.hpp"
+	#include "ispc_util.hpp"
 #endif
 #include "RTTriangle.hpp"
 
 namespace FW
+{ namespace BDPT
 {
+
+enum SplitMode {
+    SplitMode_SpatialMedian,
+    SplitMode_ObjectMedian,
+    SplitMode_Sah,
+    SplitMode_None,
+    SplitMode_Linear
+};
 
 class BVH
 {
@@ -55,4 +64,5 @@ private:
 	Node createNode(const U32 start, const U32 end) const;
 };
 
-}
+} // namespace BDPT
+} // namespace FW

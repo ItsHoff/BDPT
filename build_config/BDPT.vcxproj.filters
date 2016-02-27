@@ -10,16 +10,10 @@
     <ClCompile Include="$(BDPT_path)BvhNode.cpp">
       <Filter>RT</Filter>
     </ClCompile>
-    <ClCompile Include="$(BDPT_path)ispc_types.cpp">
-      <Filter>RT\ispc</Filter>
-    </ClCompile>
     <ClCompile Include="$(BDPT_path)RayTracer.cpp">
       <Filter>RT</Filter>
     </ClCompile>
     <ClCompile Include="$(BDPT_path)Md5.c">
-      <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="$(BDPT_path)util.cpp">
       <Filter>util</Filter>
     </ClCompile>
     <ClCompile Include="$(BDPT_path)AreaLight.cpp">
@@ -42,9 +36,6 @@
     <ClInclude Include="$(BDPT_path)intersect_ispc.h">
       <Filter>RT\ispc</Filter>
     </ClInclude>
-    <ClInclude Include="$(BDPT_path)ispc_types.hpp">
-      <Filter>RT\ispc</Filter>
-    </ClInclude>
     <ClInclude Include="$(BDPT_path)RaycastResult.hpp">
       <Filter>RT</Filter>
     </ClInclude>
@@ -54,17 +45,14 @@
     <ClInclude Include="$(BDPT_path)RTTriangle.hpp">
       <Filter>RT</Filter>
     </ClInclude>
-    <ClInclude Include="$(BDPT_path)rtutil.hpp">
-      <Filter>RT</Filter>
-    </ClInclude>
-    <ClInclude Include="$(BDPT_path)util.hpp">
-      <Filter>util</Filter>
-    </ClInclude>
     <ClInclude Include="$(BDPT_path)AreaLight.hpp">
       <Filter>PT</Filter>
     </ClInclude>
     <ClInclude Include="$(BDPT_path)PathTraceRenderer.hpp">
       <Filter>PT</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BDPT\ispc_util.hpp">
+      <Filter>RT\ispc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

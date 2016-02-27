@@ -2,16 +2,21 @@
 
 #include "3d/CameraControls.hpp"
 #include "3d/Mesh.hpp"
+#include "gui/Image.hpp"
 #include "base/Random.hpp"
 #include "base/MulticoreLauncher.hpp"
 
 #include <vector>
 #include <memory>
 
+#include "AreaLight.hpp"
 #include "RayTracer.hpp"
+#include "RaycastResult.hpp"
+#include "RTTriangle.hpp"
 
 
 namespace FW
+{ namespace BDPT 
 {
 
 //------------------------------------------------------------------------
@@ -20,11 +25,6 @@ typedef Mesh<VertexPNTC>	MeshWithColors;
 
 //------------------------------------------------------------------------
 
-class RayTracer;
-struct RaycastResult;
-struct RTTriangle;
-class Image;
-class AreaLight;
 
 
 /// Defines a block which is rendered by a single thread as a single task.
@@ -96,4 +96,5 @@ protected:
 
 void cosineSampleDirection(const Vec3f& n, Vec3f& new_dir, float& pdf, Random& R);
 
+}	// namespace BDPT
 }	// namespace FW

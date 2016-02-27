@@ -1,6 +1,7 @@
 #include "BvhNode.hpp"
 
 namespace FW
+{ namespace BDPT
 {
 
 F32 Node::intersect(const Vec3f& orig, const Vec3f& dir, const Vec3f& inv_dir) const {
@@ -29,4 +30,5 @@ F32 Node::intersect(const Vec3f& orig, const Vec3f& dir, const Vec3f& inv_dir) c
 	}
 }
 
+} //namespace BDPT
 } //namespace FW
