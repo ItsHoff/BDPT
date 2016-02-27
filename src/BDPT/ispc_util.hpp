@@ -18,12 +18,14 @@ struct ISPCNode {
 	U32 first_triangle;	// index of the first triangle
 };
 
+// Conversion from vector to array
 inline void convertToISPC(Vec3f original, float converted[3]) {
 	for (U32 dim = 0; dim < 3; dim++) {
 		converted[dim] = original[dim];
 	}
 }
 
+// Conversion from matrix to 2d-array
 inline void convertToISPC(Mat3f original, float converted[3][3])     {
 	F32* mat_ptr = original.getPtr();
 	for (U32 i = 0; i < 3; i++) {
@@ -33,6 +35,7 @@ inline void convertToISPC(Mat3f original, float converted[3][3])     {
 	}
 }
 
+// Convert triangle to ispc format
 inline ispc::Triangle convertToISPC(const RTTriangle& original) {
 	ispc::Triangle converted;
 	convertToISPC(original.m_data.M, converted.M);
@@ -40,6 +43,7 @@ inline ispc::Triangle convertToISPC(const RTTriangle& original) {
 	return converted;
 }
 
+// Convert AABB to ispc format
 inline ispc::AABB convertToISPC(const AABB& original) {
 	ispc::AABB converted;
 	convertToISPC(original.max, converted.max);
