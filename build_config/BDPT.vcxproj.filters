@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="$(BDPT_path)App.cpp">
+      <Filter>PT</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)Bvh.cpp">
+      <Filter>RT</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)BvhNode.cpp">
+      <Filter>RT</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)ispc_types.cpp">
+      <Filter>RT\ispc</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)RayTracer.cpp">
+      <Filter>RT</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)Md5.c">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)util.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)AreaLight.cpp">
+      <Filter>PT</Filter>
+    </ClCompile>
+    <ClCompile Include="$(BDPT_path)PathTraceRenderer.cpp">
+      <Filter>PT</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(BDPT_path)App.hpp">
+      <Filter>PT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)Bvh.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)BvhNode.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)intersect_ispc.h">
+      <Filter>RT\ispc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)ispc_types.hpp">
+      <Filter>RT\ispc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)RaycastResult.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)RayTracer.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)RTTriangle.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)filesaves.hpp">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)rtutil.hpp">
+      <Filter>RT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)util.hpp">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)AreaLight.hpp">
+      <Filter>PT</Filter>
+    </ClInclude>
+    <ClInclude Include="$(BDPT_path)PathTraceRenderer.hpp">
+      <Filter>PT</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="RT">
+      <UniqueIdentifier>{a30bc0c7-d024-447c-99ee-d8ea06d5ddb5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PT">
+      <UniqueIdentifier>{5fb11408-5924-439f-b28b-ce5d3e1cc5f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="RT\ispc">
+      <UniqueIdentifier>{855f2c1b-6fe9-42f1-9a2c-b0c3b2ae526b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{4f662e4d-ab3c-445f-a0ea-b3067c1a36db}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="$(BDPT_path)intersect.ispc">
+      <Filter>RT\ispc</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(BDPT_path)rtIntersect.inl">
+      <Filter>RT</Filter>
+    </None>
+  </ItemGroup>
+</Project>
