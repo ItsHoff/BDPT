@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base/math.hpp"
+#include "base/Math.hpp"
 #include "3d/Mesh.hpp"
 
 
@@ -10,16 +10,15 @@ namespace FW
 
 struct tri_data {
 	Vec3i vertex_indices;	// indices to the vertex array of the mesh
-	Mat3f M; Vec3f N;		// for Woop intersection
+	Mat3f M;    // for Woop intersection
+    Vec3f N;    // for Woop intersection
 
 	tri_data() : 
         M(), N() {
     }
-
 	tri_data(const tri_data& other) : 
         M(other.M), N(other.N) {
     }
-
 	tri_data(const Vec3f& v0, const Vec3f& v1, const Vec3f& v2, const Vec3f normal) {
 		M.setCol(0, v1 - v0);
 		M.setCol(1, v2 - v0);
@@ -33,10 +32,10 @@ struct tri_data {
 // The user pointer member can be used for identifying the triangle in the "parent" mesh representation.
 class RTTriangle {
  public:
-	VertexPNTC			m_vertices[3];			// The vertices of the triangle.
-	MeshBase::Material* m_material;				// Material of the triangle
-	tri_data			m_data;					// Holds the matrix and vector necessary for Woop intersection and vertex index in the mesh
-	Vec3f				center;
+	VertexPNTC m_vertices[3];           // The vertices of the triangle.
+	MeshBase::Material* m_material;     // Material of the triangle
+	tri_data m_data;                    // Holds the matrix and vector necessary for Woop intersection and vertex index in the mesh
+	Vec3f center;                       // Pre-calculated center of the triangle
 
 	RTTriangle(const VertexPNTC v0, const VertexPNTC v1, const VertexPNTC v2) {
 		m_vertices[0] = v0;

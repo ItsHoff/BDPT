@@ -17,6 +17,7 @@ namespace FW
 // i.e. a coordinate system aligned such that n is its local z axis.
 Mat3f formBasis(const Vec3f& n);
 
+// Get texel indices of texel nearest to the uv vector.
 Vec2f getTexelCoords(Vec2f uv, const Vec2i size);
 
 // Helper struct for the hierarchy traversal
@@ -46,14 +47,14 @@ class RayTracer {
  public:
     std::vector<RTTriangle>* m_triangles;
 	BVH bvh;
-	//U32 max_size;
 
-    RayTracer(void);
-    ~RayTracer(void);
+    RayTracer() {}
+    ~RayTracer() {};
 
 	void constructHierarchy(std::vector<RTTriangle>& triangles, SplitMode splitMode);
     void saveHierarchy(const char* filename, const std::vector<RTTriangle>& triangles);
     void loadHierarchy(const char* filename, std::vector<RTTriangle>& triangles);
+    // Trace the given ray. b_nodes is a pre-allocated buffer for traversal stack
     RaycastResult raycast(const Vec3f& orig, const Vec3f& dir, std::vector<CheckNode>& b_nodes) const;
 #ifdef ISPC
     RaycastResult ispcRaycast(const Vec3f & orig, const Vec3f & dir, std::vector<ISPCCheckNode>& b_nodes) const;

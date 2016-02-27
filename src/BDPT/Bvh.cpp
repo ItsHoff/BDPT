@@ -3,27 +3,18 @@
 #include <algorithm>
 #include <deque>
 
-#ifdef ISPC
-    #include "ispc_util.hpp"
-#endif
-
 namespace FW
 { namespace BDPT
 {
 
-
-BVH::BVH() {
-}
-
-BVH::~BVH() {
-}
-
 void BVH::construct(std::vector<RTTriangle>& triangles) {
+    // Initialize triangle vectors
 	triangles_ = &triangles;
 	tri_indices_.reserve(triangles.size());
 	for (int i = 0; i < triangles.size(); i++) {
 		tri_indices_.push_back(i);
 	}
+    // Simply add a root node and sort the triangles
 	hierarchy_.push_back(createNode(0, triangles.size()));
 	U32 split_axis = chooseLongestAxis(hierarchy_[0].bb);
 	auto sort_f = [&](U32 t1, U32 t2) -> bool {
@@ -32,23 +23,26 @@ void BVH::construct(std::vector<RTTriangle>& triangles) {
 		return c1[split_axis] < c2[split_axis];
 	};
 	std::sort(tri_indices_.begin(), tri_indices_.end(), sort_f);
+    // Sort the main triangle vector for performance
 	sortTriangles();
 }
 
 void BVH::constructObjectMedian(std::vector<RTTriangle>& triangles) {
+    // Initialize triangle vectors
 	triangles_ = &triangles;
 	tri_indices_.reserve(triangles.size());
 	for (int i = 0; i < triangles.size(); i++) {
 		tri_indices_.push_back(i);
 	}
 	hierarchy_.push_back(createNode(0, triangles.size()));
-	std::vector<U32> nodes_to_split = {0};
+	std::vector<U32> nodes_to_split = {0};      // Stack for nodes still to be split
 	nodes_to_split.reserve(log2f(triangles.size()));
 	while (!nodes_to_split.empty()) {
 		Node& node_to_split = hierarchy_[nodes_to_split.back()];
 		nodes_to_split.pop_back();
 		U32 start = node_to_split.start;
 		U32 end = node_to_split.end;
+        // Choose the longest axis for splitting and sort the triangles 
 		U32 split_axis = chooseLongestAxis(node_to_split.bb);
 		auto comp_f = [&](U32 t1, U32 t2) -> bool {
 			Vec3f c1 = (*triangles_)[t1].center;
@@ -56,6 +50,8 @@ void BVH::constructObjectMedian(std::vector<RTTriangle>& triangles) {
 			return c1[split_axis] < c2[split_axis];
 		};
 		std::sort(tri_indices_.begin() + start, tri_indices_.begin() + end, comp_f);
+        // Find the middle index and add the child nodes to the split stack 
+        // if they are still too big.
 		U32 mid = (start + end) / 2;
 		node_to_split.left_child = hierarchy_.size();
 		node_to_split.right_child = hierarchy_.size() + 1;
@@ -68,23 +64,26 @@ void BVH::constructObjectMedian(std::vector<RTTriangle>& triangles) {
 		hierarchy_.push_back(createNode(start, mid));
 		hierarchy_.push_back(createNode(mid, end));
 	}
+    // Sort the main triangle vector for performance
 	sortTriangles();
 }
 
 void BVH::constructSpatialMedian(std::vector<RTTriangle>& triangles) {
+    // Initialize triangle vectors
 	triangles_ = &triangles;
 	tri_indices_.reserve(triangles.size());
 	for (int i = 0; i < triangles.size(); i++) {
 		tri_indices_.push_back(i);
 	}
 	hierarchy_.push_back(createNode(0, triangles.size()));
-	std::vector<U32> nodes_to_split = {0};
+	std::vector<U32> nodes_to_split = {0};      // Stack for nodes still to be split
 	nodes_to_split.reserve(log2f(triangles.size()));
 	while (!nodes_to_split.empty()) {
 		Node& node_to_split = hierarchy_[nodes_to_split.back()];
 		nodes_to_split.pop_back();
 		U32 start = node_to_split.start;
 		U32 end = node_to_split.end;
+        // Choose the longest axis for splitting and sort the triangles 
 		U32 split_axis = chooseLongestAxis(node_to_split.bb);
 		auto sort_f = [&](U32 t1, U32 t2) -> bool {
 			Vec3f c1 = (*triangles_)[t1].center;
@@ -92,32 +91,39 @@ void BVH::constructSpatialMedian(std::vector<RTTriangle>& triangles) {
 			return c1[split_axis] < c2[split_axis];
 		};
 		std::sort(tri_indices_.begin() + start, tri_indices_.begin() + end, sort_f);
+        // Find the split index
 		U32 mid_i = findSpatialMedian(node_to_split, split_axis);
+        // If all triangles fall to one side of the spatial median
+        // use object median instead
 		if (mid_i == start || mid_i == end) {
 			mid_i = (start + end) / 2;
 		}
 		node_to_split.left_child = hierarchy_.size();
 		node_to_split.right_child = hierarchy_.size() + 1;
+        // Add the childs to the split stack if they are still too big
 		if (mid_i - start > tris_in_leaf) {
 			nodes_to_split.push_back(node_to_split.left_child);
 		}
 		if (end - mid_i > tris_in_leaf) {
 			nodes_to_split.push_back(node_to_split.right_child);
 		}
+        // Construct the child nodes
 		hierarchy_.push_back(createNode(start, mid_i));
 		hierarchy_.push_back(createNode(mid_i, end));
 	}
+    // Sort the main triangle vector for performance
 	sortTriangles();
 }
 
 void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
+    // Initialize triangle vectors
 	triangles_ = &triangles;
 	tri_indices_.reserve(triangles.size());
 	for (int i = 0; i < triangles.size(); i++) {
 		tri_indices_.push_back(i);
 	}
 	hierarchy_.push_back(createNode(0, triangles.size()));
-	std::vector<U32> nodes_to_split = {0};
+	std::vector<U32> nodes_to_split = {0};      // Stack for nodes still to be split
 	nodes_to_split.reserve(log2f(triangles.size()));
 	while (!nodes_to_split.empty()) {
 		Node& node = hierarchy_[nodes_to_split.back()];
@@ -125,9 +131,11 @@ void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
 		U32 start = node.start;
 		U32 end = node.end;
 
+        // Find the optimal split by SAH
 		U32 min_axis, mid_i;
         F32 min_sah = FLT_MAX;
 		for (U32 split_axis = 0; split_axis < 3; split_axis++) {
+            // Sort the triangles on the current axis
 			auto sort_f = [&](U32 t1, U32 t2) -> bool {
 				Vec3f c1 = (*triangles_)[t1].center;
 				Vec3f c2 = (*triangles_)[t2].center;
@@ -135,10 +143,13 @@ void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
 			};
 			std::sort(tri_indices_.begin() + start, tri_indices_.begin() + end, sort_f);
 
+            // Test split only between [start+1, end-1) because we want to keep splitting
+            // nodes until tris_in_leaf for ispc
 			U32 test_start = start + 1;
 			U32 test_end =  end - 1;
 			U32 test_length = test_end - test_start;
 			U32 tests =  test_length + 1;
+            // Incrementally compute all the necessary bounding boxes
 			std::vector<std::pair<AABB, U32>> left_bbs;
 			std::vector<std::pair<AABB, U32>> right_bbs;
 			left_bbs.reserve(tests);
@@ -152,6 +163,7 @@ void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
 				left_bbs.emplace_back(computeIncreasedBB(left_bbs[i-1].first, left_bbs[i-1].second, left_i), left_i);
 				right_bbs.emplace_back(computeIncreasedBB(right_bbs[i-1].first, right_i, right_bbs[i-1].second), right_i);
 			}
+            // Calculate the SAH for all the possible splits and find the optimal one
 			for (U32 i = 0; i < tests; i++) {
 				AABB left_bb = left_bbs[i].first;
 				AABB right_bb = right_bbs[tests - 1 - i].first;
@@ -164,7 +176,9 @@ void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
 				}
 			}
 		}
-		if (min_axis != 3) {
+
+        // If the split axis is not the last tested we need to re-sort triangles
+		if (min_axis != 2) {
 			auto sort_f = [&](U32 t1, U32 t2) -> bool {
 				Vec3f c1 = (*triangles_)[t1].center;
 				Vec3f c2 = (*triangles_)[t2].center;
@@ -173,6 +187,8 @@ void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
 			std::sort(tri_indices_.begin() + start, tri_indices_.begin() + end, sort_f);
 		}
 
+        // Finally construct the child nodes and add them to split stack 
+        // if they are still too big
         node.left_child = hierarchy_.size();
         node.right_child = hierarchy_.size() + 1;
         if (mid_i - start > tris_in_leaf) {
@@ -184,10 +200,12 @@ void BVH::constructSAH(std::vector<RTTriangle>& triangles) {
         hierarchy_.push_back(createNode(start, mid_i));
         hierarchy_.push_back(createNode(mid_i, end));
 	}
+    // Sort the main triangle vector for performance
 	sortTriangles();
 }
 
 AABB BVH::computeBoundingBox(const U32 start, const U32 end) const {
+    // Find the maximum and minimum coordinates for triangles between [start, end)
 	Vec3f max = (*triangles_)[tri_indices_[start]].max();
 	Vec3f min = (*triangles_)[tri_indices_[start]].min();
 	for (U32 i = start+1; i < end; i++){
@@ -197,7 +215,8 @@ AABB BVH::computeBoundingBox(const U32 start, const U32 end) const {
 	return AABB(min, max);
 }
 
-AABB BVH::computeIncreasedBB(const AABB & bb, const U32 start, const U32 end) const {
+AABB BVH::computeIncreasedBB(const AABB& bb, const U32 start, const U32 end) const {
+    // Find the maximum and minimum coordinates for existing bb and triangles between [start, end)
 	Vec3f max = bb.max;
 	Vec3f min = bb.min;
 	for (U32 i = start; i < end; i++){
@@ -208,6 +227,7 @@ AABB BVH::computeIncreasedBB(const AABB & bb, const U32 start, const U32 end) co
 }
 
 U32 BVH::chooseLongestAxis(const AABB& bounding_box) const {
+    // Check all the axis and see which is the longest
 	Vec3f length = bounding_box.max - bounding_box.min;
 	if (length.z > length.y && length.z > length.x) {
 		return 2;
@@ -221,11 +241,14 @@ U32 BVH::chooseLongestAxis(const AABB& bounding_box) const {
 }
 
 U32 BVH::findSpatialMedian(const Node& node, const U32 split_axis) const {
+    // Calculate spatial mid point of the node on the split_axis
 	F32 mid = (node.bb.max[split_axis] + node.bb.min[split_axis]) / 2;
 	auto comp_f = [&](F32 mid, U32 t) -> bool {
 		Vec3f c = (*triangles_)[t].center;
 		return mid < c[split_axis];
 	};
+    // Find the first tri that is on the other side of the mid point
+    // Assumes allready sorted tri_indices!
 	U32 mid_i = std::upper_bound(tri_indices_.begin() + node.start, tri_indices_.begin() + node.end, mid, comp_f) - tri_indices_.begin();
 	return mid_i;
 }
@@ -263,6 +286,7 @@ void BVH::rebranchForISPC(U32 power) {
 		ispc_triangles_.push_back(convertToISPC(triangle));
 	}
 
+    // Add empty node first. It will be filled later.
 	ispc_hierarchy_.emplace_back();
 	ispc_bbs_.push_back(convertToISPC(hierarchy_[0].bb));
 	std::vector<std::pair<U32, U32>> nodes_to_check;  // pair<index, ispc_index>
@@ -270,7 +294,7 @@ void BVH::rebranchForISPC(U32 power) {
 	while (!nodes_to_check.empty()) {
 		const std::pair<U32, U32> indices = nodes_to_check.back();
 		nodes_to_check.pop_back();
-		// Find the 2^power children for each node
+		// Find all the children power levels down for each node (ie. up to 2^power)
 		std::vector<U32> parents;
 		std::vector<U32> children;
 		parents.reserve(1 << power);
@@ -284,6 +308,8 @@ void BVH::rebranchForISPC(U32 power) {
 					children.push_back(hierarchy_[parent].left_child);
 					children.push_back(hierarchy_[parent].right_child);
                 } else if (parent != indices.first) {
+                    // If the node doesn't have children and isn't the current node
+                    // we need to add it back to children to retain the branch.
                     children.push_back(parent);
                 }
 			}
