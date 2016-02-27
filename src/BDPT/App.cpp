@@ -9,7 +9,6 @@
 #include "base/Random.hpp"
 
 #include "RayTracer.hpp"
-#include "rtlib.hpp"
 
 #include <stdio.h>
 #include <conio.h>

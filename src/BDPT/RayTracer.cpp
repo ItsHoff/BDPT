@@ -10,8 +10,6 @@
 #include "base/Math.hpp"
 
 #include "RayTracer.hpp"
-#include "rtIntersect.inl"
-#include "rtlib.hpp"
 #ifdef ISPC
 	#include "intersect_ispc.h"
 #endif

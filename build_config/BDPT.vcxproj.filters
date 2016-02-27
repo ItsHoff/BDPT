@@ -54,9 +54,6 @@
     <ClInclude Include="$(BDPT_path)RTTriangle.hpp">
       <Filter>RT</Filter>
     </ClInclude>
-    <ClInclude Include="$(BDPT_path)filesaves.hpp">
-      <Filter>util</Filter>
-    </ClInclude>
     <ClInclude Include="$(BDPT_path)rtutil.hpp">
       <Filter>RT</Filter>
     </ClInclude>
@@ -88,10 +85,5 @@
     <CustomBuild Include="$(BDPT_path)intersect.ispc">
       <Filter>RT\ispc</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="$(BDPT_path)rtIntersect.inl">
-      <Filter>RT</Filter>
-    </None>
   </ItemGroup>
 </Project>

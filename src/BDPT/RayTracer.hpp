@@ -3,7 +3,6 @@
 
 #include "RTTriangle.hpp"
 #include "RaycastResult.hpp"
-#include "rtlib.hpp"
 #include "Bvh.hpp"
 
 #include "base/String.hpp"
