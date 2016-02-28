@@ -125,11 +125,11 @@ void PathTraceRenderer::pathTraceBlock( MulticoreLauncher::Task& t )
 #ifdef ISPC
     // Pre-allocate buffers
     std::vector<ISPCCheckNode> b_nodes;
-    b_nodes.reserve(2*log2f(rt->bvh.ispc_hierarchy_.size()));
+    b_nodes.reserve(2*log2f(rt->m_bvh.m_ispc_hierarchy.size()));
 #else
     // Pre-allocate buffers
     std::vector<CheckNode> b_nodes;
-    b_nodes.reserve(2*log2f(rt->bvh.hierarchy_.size()));
+    b_nodes.reserve(2*log2f(rt->m_bvh.m_hierarchy.size()));
 #endif // ISPC
 
     for ( int i = 0; i < block.m_width * block.m_height; ++i )

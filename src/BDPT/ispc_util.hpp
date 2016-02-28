@@ -25,7 +25,7 @@ inline void convertToISPC(Vec3f original, float converted[3]) {
 	}
 }
 
-// Conversion from matrix to 2d-array
+// Conversion from matrix to 2d-array. Retains order
 inline void convertToISPC(Mat3f original, float converted[3][3])     {
 	F32* mat_ptr = original.getPtr();
 	for (U32 i = 0; i < 3; i++) {

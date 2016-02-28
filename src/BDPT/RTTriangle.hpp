@@ -35,14 +35,14 @@ class RTTriangle {
 	VertexPNTC m_vertices[3];           // The vertices of the triangle.
 	MeshBase::Material* m_material;     // Material of the triangle
 	tri_data m_data;                    // Holds the matrix and vector necessary for Woop intersection and vertex index in the mesh
-	Vec3f center;                       // Pre-calculated center of the triangle
+	Vec3f m_center;                     // Pre-calculated center of the triangle
 
 	RTTriangle(const VertexPNTC v0, const VertexPNTC v1, const VertexPNTC v2) {
 		m_vertices[0] = v0;
 		m_vertices[1] = v1;
 		m_vertices[2] = v2;
 		m_data = tri_data(v0.p, v1.p, v2.p, normal());
-		center = centroid();
+		m_center = centroid();
 	}
 
 	inline Vec3f min() const {

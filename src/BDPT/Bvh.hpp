@@ -31,13 +31,13 @@ class BVH {
     BVH() {}
     ~BVH() {}
 
-	std::vector<Node> hierarchy_;           
-	std::vector<U32> tri_indices_;          // Triangle indices for sorting the triangles and saving the hierarchy
-    std::vector<RTTriangle>* triangles_;    // Triangles for the intersections
+	std::vector<Node> m_hierarchy;           
+	std::vector<U32> m_tri_indices;          // Triangle indices for sorting the triangles and saving the hierarchy
+    std::vector<RTTriangle>* m_triangles;    // Triangles for the intersections
 #ifdef ISPC
-	std::vector<ISPCNode> ispc_hierarchy_;
-	std::vector<ispc::AABB> ispc_bbs_;              // AABBs for ispc intersections
-	std::vector<ispc::Triangle> ispc_triangles_;    // Triangles for ispc intersections
+	std::vector<ISPCNode> m_ispc_hierarchy;
+	std::vector<ispc::AABB> m_ispc_bbs;              // AABBs for ispc intersections
+	std::vector<ispc::Triangle> m_ispc_triangles;    // Triangles for ispc intersections
 #endif
 
     // Construct hierarchy with no splitting
@@ -56,7 +56,7 @@ class BVH {
 #endif
 
  private:
-	const U32 tris_in_leaf = TRIS_IN_LEAF;      // Maximum amount of triangles in a leaf node
+	static const U32 m_tris_in_leaf = TRIS_IN_LEAF;      // Maximum amount of triangles in a leaf node
 
     // Compute the bounding box of triangles in [start, end)
 	AABB computeBoundingBox(const U32 start, const U32 end) const;

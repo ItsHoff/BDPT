@@ -46,7 +46,7 @@ struct ISPCCheckNode {
 class RayTracer {
  public:
     std::vector<RTTriangle>* m_triangles;
-	BVH bvh;
+	BVH m_bvh;
 
     RayTracer() {}
     ~RayTracer() {};

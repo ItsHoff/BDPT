@@ -66,7 +66,7 @@ String RayTracer::computeMD5(const std::vector<Vec3f>& vertices) {
 void RayTracer::loadHierarchy(const char* filename, std::vector<RTTriangle>& triangles) {
 	printf("Loading hierarchy from %s\n", filename);
     m_triangles = &triangles;
-    bvh.triangles_ = &triangles;
+    m_bvh.m_triangles = &triangles;
     U32 hierarchy_size, tri_size;
     std::ifstream i_stream(filename, std::ifstream::binary);
 
@@ -82,28 +82,28 @@ void RayTracer::loadHierarchy(const char* filename, std::vector<RTTriangle>& tri
     FW_ASSERT(tri_size == triangles.size());
 
     // Copy to bvh
-    bvh.hierarchy_ = tmp_hierarchy;
-    bvh.tri_indices_ = tmp_tri_indices;
+    m_bvh.m_hierarchy = tmp_hierarchy;
+    m_bvh.m_tri_indices = tmp_tri_indices;
     // Sort the triangles so that the traversal works properly
     // We assume that the triangles are in the same order now as when the hierarchy was built
-    bvh.sortTriangles();
+    m_bvh.sortTriangles();
 #ifdef ISPC
     // Process the hierarchy for ispc
-    bvh.rebranchForISPC(log2f(TRIS_IN_LEAF));
+    m_bvh.rebranchForISPC(log2f(TRIS_IN_LEAF));
 #endif // ISPC
 }
 
 void RayTracer::saveHierarchy(const char* filename, const std::vector<RTTriangle>& triangles) {
 	printf("Saving hierarchy to %s\n", filename);
-    U32 hierarchy_size = bvh.hierarchy_.size();
-    U32 tri_size = bvh.tri_indices_.size();
+    U32 hierarchy_size = m_bvh.m_hierarchy.size();
+    U32 tri_size = m_bvh.m_tri_indices.size();
     std::ofstream o_stream(filename, std::ofstream::binary);
     // Write hierarchy
     o_stream.write(reinterpret_cast<char*>(&hierarchy_size), sizeof(hierarchy_size));
-    o_stream.write(reinterpret_cast<char*>(bvh.hierarchy_.data()), hierarchy_size * sizeof(Node));
+    o_stream.write(reinterpret_cast<char*>(m_bvh.m_hierarchy.data()), hierarchy_size * sizeof(Node));
     // Write the sorted triangle indices 
     o_stream.write(reinterpret_cast<char*>(&tri_size), sizeof(tri_size));
-    o_stream.write(reinterpret_cast<char*>(bvh.tri_indices_.data()), tri_size * sizeof(U32));
+    o_stream.write(reinterpret_cast<char*>(m_bvh.m_tri_indices.data()), tri_size * sizeof(U32));
 }
 
 void RayTracer::constructHierarchy(std::vector<RTTriangle>& triangles, SplitMode split_mode) {
@@ -112,35 +112,35 @@ void RayTracer::constructHierarchy(std::vector<RTTriangle>& triangles, SplitMode
 	switch (split_mode) {
 		case SplitMode_Sah:
 			printf("SAH builder\n");
-			bvh.constructSAH(triangles);
-			printf("Size: %d\n", bvh.hierarchy_.size());
+			m_bvh.constructSAH(triangles);
+			printf("Size: %d\n", m_bvh.m_hierarchy.size());
 			break;
 		case SplitMode_SpatialMedian:
 			printf("Spatial median builder\n");
-			bvh.constructSpatialMedian(triangles);
-			printf("Size: %d\n", bvh.hierarchy_.size());
+			m_bvh.constructSpatialMedian(triangles);
+			printf("Size: %d\n", m_bvh.m_hierarchy.size());
 			break;
 		case SplitMode_ObjectMedian:
 			printf("Object median builder\n");
-			bvh.constructObjectMedian(triangles);
-			printf("Size: %d\n", bvh.hierarchy_.size());
+			m_bvh.constructObjectMedian(triangles);
+			printf("Size: %d\n", m_bvh.m_hierarchy.size());
 			break;
 		case SplitMode_None:
 			printf("No builder\n");
-			bvh.construct(triangles);
-			printf("Size: %d\n", bvh.hierarchy_.size());
+			m_bvh.construct(triangles);
+			printf("Size: %d\n", m_bvh.m_hierarchy.size());
 			break;
 		default:
 			printf("Default builder (SAH)\n");
-			bvh.constructSAH(triangles);
-			printf("Size: %d\n", bvh.hierarchy_.size());
+			m_bvh.constructSAH(triangles);
+			printf("Size: %d\n", m_bvh.m_hierarchy.size());
 			break;
 	} 
 #ifdef ISPC
     // Process the hierarchy for ispc use
     // Intermediate nodes will have same number of leafs as leaf nodes have triangles 
     // (this should match the available vector lanes on the used processor)
-	bvh.rebranchForISPC(log2f(TRIS_IN_LEAF));
+	m_bvh.rebranchForISPC(log2f(TRIS_IN_LEAF));
 #endif
 }
 
@@ -158,7 +158,7 @@ RaycastResult RayTracer::raycast(const Vec3f& orig, const Vec3f& dir,std::vector
 	inv_dir.z = 1 / dir.z;
 
     // Add the root to the traversal stack
-	b_nodes.emplace_back(&(Node&)bvh.hierarchy_[0], 0.0f);	// Have to force the return value otherwise this returns const&
+	b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[0], 0.0f);	// Have to force the return value otherwise this returns const&
 	while (!b_nodes.empty()) {
         CheckNode c_node = b_nodes.back();
 		b_nodes.pop_back();
@@ -182,21 +182,21 @@ RaycastResult RayTracer::raycast(const Vec3f& orig, const Vec3f& dir,std::vector
 			}
 		}
 		else {
-			F32 t_l = bvh.hierarchy_[node.left_child].intersect(orig, dir, inv_dir);
-			F32 t_r = bvh.hierarchy_[node.right_child].intersect(orig, dir, inv_dir);
+			F32 t_l = m_bvh.m_hierarchy[node.left_child].intersect(orig, dir, inv_dir);
+			F32 t_r = m_bvh.m_hierarchy[node.right_child].intersect(orig, dir, inv_dir);
             // Add the intersected child nodes to the stack. Closer hit is added on top.
 			if (t_l < t_min && t_r < t_min) {
 				if (t_l < t_r) {
-					b_nodes.emplace_back(&(Node&)bvh.hierarchy_[node.right_child], t_r);
-					b_nodes.emplace_back(&(Node&)bvh.hierarchy_[node.left_child], t_l);
+					b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[node.right_child], t_r);
+					b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[node.left_child], t_l);
 				} else {
-					b_nodes.emplace_back(&(Node&)bvh.hierarchy_[node.left_child], t_l);
-					b_nodes.emplace_back(&(Node&)bvh.hierarchy_[node.right_child], t_r);
+					b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[node.left_child], t_l);
+					b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[node.right_child], t_r);
 				}
 			} else if (t_l < t_min) {
-				b_nodes.emplace_back(&(Node&)bvh.hierarchy_[node.left_child], t_l);
+				b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[node.left_child], t_l);
 			} else if (t_r < t_min) {
-				b_nodes.emplace_back(&(Node&)bvh.hierarchy_[node.right_child], t_r);
+				b_nodes.emplace_back(&(Node&)m_bvh.m_hierarchy[node.right_child], t_r);
 			}
 		}
 	}
@@ -226,7 +226,7 @@ RaycastResult RayTracer::ispcRaycast(const Vec3f & orig, const Vec3f & dir, std:
 	convertToISPC(inv_dir, ispc_inv_dir);
 
     // Add the root to the stack
-	b_nodes.emplace_back(&(ISPCNode&)bvh.ispc_hierarchy_[0], 0.0f);  // Have to force the return value otherwise this returns a const&
+	b_nodes.emplace_back(&(ISPCNode&)m_bvh.m_ispc_hierarchy[0], 0.0f);  // Have to force the return value otherwise this returns a const&
 	while (!b_nodes.empty()) {
         ISPCCheckNode c_node = b_nodes.back();
 		b_nodes.pop_back();
@@ -238,7 +238,7 @@ RaycastResult RayTracer::ispcRaycast(const Vec3f & orig, const Vec3f & dir, std:
 		if (node.n_children == 0) {
             // Intersect all the triangles at once using ispc
 			ispc::TriangleIntersection intersections[TRIS_IN_LEAF];
-			ispc::intersectTriangle(ispc_orig, ispc_dir, &bvh.ispc_triangles_[node.first_triangle], node.n_triangles, intersections);
+			ispc::intersectTriangle(ispc_orig, ispc_dir, &m_bvh.m_ispc_triangles[node.first_triangle], node.n_triangles, intersections);
             // Check all the potential intersections
 			for (U32 i = 0; i < node.n_triangles; i++) {
 				ispc::TriangleIntersection intersection = intersections[i];
@@ -253,13 +253,13 @@ RaycastResult RayTracer::ispcRaycast(const Vec3f & orig, const Vec3f & dir, std:
 		else {
             // Intersect all the bounding boxes using ispc
 			float ts[TRIS_IN_LEAF];
-			ispc::intersectAABB(ispc_orig, ispc_dir, ispc_inv_dir, &bvh.ispc_bbs_[node.first_bb], node.n_children, ts);
+			ispc::intersectAABB(ispc_orig, ispc_dir, ispc_inv_dir, &m_bvh.m_ispc_bbs[node.first_bb], node.n_children, ts);
             // Check all the potential hits
             U32 hit_nodes = 0;
 			for (U32 i = 0; i < node.n_children; i++) {
 				if (ts[i] < 1.0f) {
                     hit_nodes++;
-					b_nodes.emplace_back(&(ISPCNode&)bvh.ispc_hierarchy_[node.first_bb + i], ts[i]);
+					b_nodes.emplace_back(&(ISPCNode&)m_bvh.m_ispc_hierarchy[node.first_bb + i], ts[i]);
 				}
 			}
 			auto sort_f = [](ISPCCheckNode& n1, ISPCCheckNode& n2) {
