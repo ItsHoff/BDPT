@@ -1,13 +1,13 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include "3d/CameraControls.hpp"
 #include "3d/Mesh.hpp"
-#include "gui/Image.hpp"
-#include "base/Random.hpp"
 #include "base/MulticoreLauncher.hpp"
-
-#include <vector>
-#include <memory>
+#include "base/Random.hpp"
+#include "gui/Image.hpp"
 
 #include "AreaLight.hpp"
 #include "RayTracer.hpp"
@@ -19,82 +19,86 @@ namespace FW
 { namespace BDPT 
 {
 
-//------------------------------------------------------------------------
-
 typedef Mesh<VertexPNTC>	MeshWithColors;
 
-//------------------------------------------------------------------------
-
-
-
-/// Defines a block which is rendered by a single thread as a single task.
-struct PathTracerBlock
-{
-    int m_x;      ///< X coordinate of the leftmost pixel of the block.
-    int m_y;      ///< Y coordinate of the topmost pixel of the block.
-    int m_width;  ///< Pixel width of the block.
-    int m_height; ///< Pixel height of the block.
+// Defines a block which is rendered by a single thread as a single task.
+struct PathTracerBlock {
+    U32 x;      // X coordinate of the leftmost pixel of the block.
+    U32 y;      // Y coordinate of the topmost pixel of the block.
+    U32 width;  // Pixel width of the block.
+    U32 height; // Pixel height of the block.
 };
 
 
-struct PathTracerContext
-{
-    PathTracerContext();
-    ~PathTracerContext();
-    
-    std::vector<PathTracerBlock> m_blocks; ///< Render blocks for rendering tasks. Index by .idx.
+struct PathTracerContext {
+    const MeshWithColors* scene;
+    const CameraControls* camera;
+    AreaLight* light;
+    RayTracer* rt;
+    std::unique_ptr<Image> image;   // Image for storing the results
+    Image* dest_image;      // Image for displaying the results
+    std::vector<PathTracerBlock> blocks; // Render blocks for rendering tasks. Index by .idx.
+    bool force_exit;    // Set to true if we want to end tracing immediately
+    U32 pass;    // Pass number, increased by one for each full render iteration.
+    U32 bounces;    // Number of bounces before quitting tracing or starting rr
 
-    bool						m_bForceExit;
-	bool						m_bResidual;
-    const MeshWithColors*		m_scene;
-    RayTracer*	                m_rt;
-    AreaLight*                  m_light;
-    int							m_pass;    ///< Pass number, increased by one for each full render iteration.
-    int							m_bounces;
-    std::unique_ptr<Image>		m_image;
-    Image*	                	m_destImage;
-    const CameraControls*		m_camera;
+    PathTracerContext() : 
+      force_exit(false),
+      scene(nullptr),
+      rt(nullptr),
+      light(nullptr),
+      pass(0),
+      bounces(0),
+      dest_image(0),
+      camera(nullptr) {
+    }
+    ~PathTracerContext() {};
 };
 
-
+// Get a cosine sampled new_dir.
+Vec3f cosineSampleDirection(const Vec3f& n, Random& R);
 
 // This class contains functionality to render pictures using a ray tracer.
-class PathTraceRenderer
-{
-public:
-    PathTraceRenderer();
-    ~PathTraceRenderer();
+class PathTraceRenderer {
+ public:
+    PathTraceRenderer() {}
+    ~PathTraceRenderer() {
+        stop();
+    }
 
-    // are we still processing?
-    bool				isRunning							( void ) const		{ return m_launcher.getNumTasks() > 0; }
-
-    void				startPathTracingProcess				( const MeshWithColors* scene, AreaLight*, RayTracer* rt, Image* dest, int bounces, const CameraControls& camera );
-	static void			pathTraceBlock						( MulticoreLauncher::Task& t);
+    // Get the texture parameters for the hit
+	static void	getTextureParameters(const RaycastResult& hit, Vec3f& diffuse, Vec3f& n, Vec3f& specular);
+    // Start the interactive tracing process
+    void startPathTracingProcess(const MeshWithColors* scene, AreaLight*, RayTracer* rt, Image* dest, U32 bounces, const CameraControls& camera);
+    // Trace a block of the image given by task
+	static void pathTraceBlock(MulticoreLauncher::Task& task);
+    // Trace the path of the given ray. b_nodes is a pre-allocated traversal stack
 #ifdef ISPC
-	static Vec3f		traceRay							( const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, int current_bounce, std::vector<ISPCCheckNode>& b_nodes);
+	static Vec3f traceRay(const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, U32 current_bounce, std::vector<ISPCCheckNode>& b_nodes);
 #else
-    static Vec3f        traceRay(const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, int current_bounce, std::vector<CheckNode>& b_nodes);
+    static Vec3f traceRay(const PathTracerContext& ctx, Random& R, Vec3f& orig, Vec3f& dir, U32 current_bounce, std::vector<CheckNode>& b_nodes);
 #endif
-	static void			getTextureParameters				( const RaycastResult& hit, Vec3f& diffuse, Vec3f& n, Vec3f& specular );
-    void				updatePicture						( Image* display );	// normalize by 1/w
-    void				checkFinish							( void );
-    void				stop								( void );
-	void				setNormalMapped						( bool b ){ m_normalMapped = b; }
-	void				setRussianRoulette					( bool b ){ m_russian_roulette = b; }
+    // Update the dest image to match the current traced image
+    void updatePicture(Image* dest);
+    void checkFinish();
+    void stop();
+    // are we still processing?
+    bool isRunning() const {
+        return m_launcher.getNumTasks() > 0; 
+    }
+	void setNormalMapped(bool b) { 
+        m_normal_mapped = b; 
+    }
+	void setRussianRoulette(bool b) {
+        m_russian_roulette = b; 
+    }
 
-
-
-protected:
-    __int64						m_s64TotalRays;
-    float						m_raysPerSecond;
-
-    MulticoreLauncher			m_launcher;
-	PathTracerContext			m_context;
-	static bool					m_normalMapped;
-	static bool					m_russian_roulette;
+ protected:
+    MulticoreLauncher m_launcher;   // Launcher used to launch the path tracing process
+	PathTracerContext m_context;    // Context holding the tracing information
+	static bool m_normal_mapped;    
+	static bool m_russian_roulette;
 };
-
-void cosineSampleDirection(const Vec3f& n, Vec3f& new_dir, float& pdf, Random& R);
 
 }	// namespace BDPT
 }	// namespace FW

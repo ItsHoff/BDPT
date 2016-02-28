@@ -134,7 +134,7 @@ void App::process_args(std::vector<std::string>& args) {
 
     // similarly a list of the implemented BVH builder types
     const std::vector<std::string> builder_names ={"none", "sah", "object_median", "spatial_median", "linear"};
-    enum builder_type { builder_not_found = -1, builder_None = 0, builder_SAH = 1, builder_ObjectMedian = 2, builder_SpatialMedian = 3, builder_Linear = 4 };
+    enum builder_type { builder_not_found = -1, builder_None = 0, builder_SAH = 1, builder_ObjectMedian = 2, builder_SpatialMedian = 3 };
 
     m_settings.batch_render = false;
     m_settings.output_images = false;
@@ -210,9 +210,6 @@ void App::process_args(std::vector<std::string>& args) {
                         m_settings.splitMode = SplitMode_SpatialMedian;
                         break;
 
-                    case builder_Linear:
-                        m_settings.splitMode = SplitMode_Linear;
-                        break;
                 }
 
                 break;

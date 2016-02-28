@@ -291,6 +291,7 @@ Session.vim
 # Saved program state
 *Hierarchy-*.bin
 *state_*.dat
+*pt-*.png
 
 # ISPC headers
 *_ispc.h
