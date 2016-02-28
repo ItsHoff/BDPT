@@ -1,4 +1,3 @@
-
 #include "AreaLight.hpp"
 
 
@@ -16,13 +15,14 @@ void AreaLight::draw(const Mat4f& worldToCamera, const Mat4f& projection) {
     Mat4f M = worldToCamera *m_xform * S;
     glLoadMatrixf((float*)&M);
     glBegin(GL_TRIANGLES);
-    glColor3fv( &m_E.x );
-    glVertex3f(1,1,0); glVertex3f(1,-1,0); glVertex3f( -1,-1,0 );
-    glVertex3f(1,1,0); glVertex3f( -1,-1,0 ); glVertex3f(-1,1,0); 
+    glColor3fv(&m_E.x);
+    glVertex3f(1,1,0); glVertex3f(1,-1,0); glVertex3f(-1,-1,0);
+    glVertex3f(1,1,0); glVertex3f(-1,-1,0); glVertex3f(-1,1,0); 
     glEnd();
 }
 
-void AreaLight::sample(float& pdf, Vec3f& p, int base, Random& rnd) {
+void AreaLight::sample(F32& pdf, Vec3f& p, Random& rnd) {
+    // Simple uniform sampling of the light 
 	pdf = 1.0f / (4 * m_size.x * m_size.y);
 	p = m_xform * Vec3f(m_size.x * rnd.getF32(-1, 1), m_size.y * rnd.getF32(-1, 1), 0);
 }

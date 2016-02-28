@@ -180,7 +180,7 @@ Vec3f PathTraceRenderer::traceRay(const PathTracerContext& ctx, Random& R, Vec3f
 		// Sample the light
 		F32 lpdf;
 		Vec3f light_sample;
-		light.sample(lpdf, light_sample, 0, R);
+		light.sample(lpdf, light_sample, R);
 		Vec3f shadow_dir = light_sample - hit.point;
 #ifdef ISPC
 		auto shadow = rt.ispcRaycast(hit.point + 0.01f * shadow_dir, shadow_dir, b_nodes);
