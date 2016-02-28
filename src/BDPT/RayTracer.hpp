@@ -51,7 +51,7 @@ class RayTracer {
     RayTracer() {}
     ~RayTracer() {};
 
-	void constructHierarchy(std::vector<RTTriangle>& triangles, SplitMode splitMode);
+	void constructHierarchy(std::vector<RTTriangle>& triangles, SplitMode split_mode);
     void saveHierarchy(const char* filename, const std::vector<RTTriangle>& triangles);
     void loadHierarchy(const char* filename, std::vector<RTTriangle>& triangles);
     // Trace the given ray. b_nodes is a pre-allocated buffer for traversal stack

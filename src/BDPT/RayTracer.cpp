@@ -108,7 +108,7 @@ void RayTracer::saveHierarchy(const char* filename, const std::vector<RTTriangle
 
 void RayTracer::constructHierarchy(std::vector<RTTriangle>& triangles, SplitMode split_mode) {
     m_triangles = &triangles;
-    // Select the builder based on splitMode
+    // Select the builder based on split_mode
 	switch (split_mode) {
 		case SplitMode_Sah:
 			printf("SAH builder\n");
