@@ -3,6 +3,8 @@ WIP bidirectional pathtracer
 
 ## Features
 * Efficient CPU raytracer utilizing SIMD 
+* Forward pathtracer
+* Normal mapping
 
 ## TODO
 * MIS
